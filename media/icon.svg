@@ -1,0 +1,119 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="JSON payload dispatched to two servers">
+  <defs>
+    <!-- Background -->
+    <linearGradient id="bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#243650"/>
+      <stop offset="0.55" stop-color="#16223A"/>
+      <stop offset="1" stop-color="#0C1320"/>
+    </linearGradient>
+
+    <!-- Warm payload (braces) -->
+    <linearGradient id="brace" x1="24" y1="34" x2="72" y2="94" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF9A4D"/>
+      <stop offset="0.5" stop-color="#FF6A45"/>
+      <stop offset="1" stop-color="#FF4A6E"/>
+    </linearGradient>
+
+    <!-- Cool flow -->
+    <linearGradient id="flow" x1="70" y1="64" x2="118" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#42E0C9"/>
+      <stop offset="1" stop-color="#5BD0FF"/>
+    </linearGradient>
+
+    <!-- Server body -->
+    <linearGradient id="server" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4F8FD"/>
+      <stop offset="1" stop-color="#D5E1F0"/>
+    </linearGradient>
+
+    <!-- Glows -->
+    <radialGradient id="warmGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FF6A45" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#FF6A45" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="coolGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#46E2CB" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#46E2CB" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Soft drop shadow -->
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="2.5" stdDeviation="2.4" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+
+    <!-- Neon line glow -->
+    <filter id="neon" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.6" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <clipPath id="badge">
+      <rect x="4" y="4" width="120" height="120" rx="27"/>
+    </clipPath>
+
+    <pattern id="dots" width="11" height="11" patternUnits="userSpaceOnUse">
+      <circle cx="1.4" cy="1.4" r="1.05" fill="#FFFFFF" opacity="0.05"/>
+    </pattern>
+  </defs>
+
+  <!-- Badge -->
+  <rect x="4" y="4" width="120" height="120" rx="27" fill="url(#bg)"/>
+
+  <g clip-path="url(#badge)">
+    <rect x="4" y="4" width="120" height="120" fill="url(#dots)"/>
+    <ellipse cx="40" cy="56" rx="58" ry="52" fill="url(#warmGlow)"/>
+    <ellipse cx="104" cy="64" rx="48" ry="48" fill="url(#coolGlow)"/>
+  </g>
+
+  <!-- Inner stroke for crispness -->
+  <rect x="4.75" y="4.75" width="118.5" height="118.5" rx="26.25" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1.5"/>
+
+  <!-- ===== Flow: trunk + fork to two servers ===== -->
+  <g filter="url(#neon)" stroke="url(#flow)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M71 64 H85"/>
+    <path d="M85 64 C92 64 92 47 99 44"/>
+    <path d="M85 64 C92 64 92 81 99 84"/>
+  </g>
+  <!-- junction node -->
+  <circle cx="85" cy="64" r="3.6" fill="#EAFBF6"/>
+
+  <!-- data pulses on the lines -->
+  <circle cx="93.5" cy="52.5" r="2.5" fill="#BFF6EC"/>
+  <circle cx="93.5" cy="75.5" r="2.5" fill="#BFF6EC"/>
+
+  <!-- arrowheads pointing into servers -->
+  <path d="M97 39.5 L103 44 L96 47.5 Z" fill="#5BD0FF"/>
+  <path d="M97 88.5 L103 84 L96 80.5 Z" fill="#5BD0FF"/>
+
+  <!-- ===== Servers ===== -->
+  <g filter="url(#shadow)">
+    <rect x="100" y="31" width="21" height="25" rx="5.5" fill="url(#server)"/>
+    <rect x="100" y="73" width="21" height="25" rx="5.5" fill="url(#server)"/>
+  </g>
+  <!-- server detailing (top) -->
+  <circle cx="105" cy="37" r="2" fill="#42E0C9"/>
+  <rect x="110" y="35.5" width="7" height="2.6" rx="1.3" fill="#9DB2CC"/>
+  <rect x="104" y="44" width="13" height="2.6" rx="1.3" fill="#B9C7DB"/>
+  <rect x="104" y="49" width="13" height="2.6" rx="1.3" fill="#B9C7DB"/>
+  <!-- server detailing (bottom) -->
+  <circle cx="105" cy="79" r="2" fill="#42E0C9"/>
+  <rect x="110" y="77.5" width="7" height="2.6" rx="1.3" fill="#9DB2CC"/>
+  <rect x="104" y="86" width="13" height="2.6" rx="1.3" fill="#B9C7DB"/>
+  <rect x="104" y="91" width="13" height="2.6" rx="1.3" fill="#B9C7DB"/>
+
+  <!-- ===== JSON payload: { } with a glowing core ===== -->
+  <g filter="url(#shadow)">
+    <path d="M38 37 Q31 37 31 44 L31 57 Q31 64 24 64 Q31 64 31 71 L31 84 Q31 91 38 91"
+          stroke="url(#brace)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M58 37 Q65 37 65 44 L65 57 Q65 64 72 64 Q65 64 65 71 L65 84 Q65 91 58 91"
+          stroke="url(#brace)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+
+  <!-- payload core between braces -->
+  <g filter="url(#neon)">
+    <rect x="43" y="59" width="10" height="10" rx="2.6" fill="#5BEAD0" transform="rotate(45 48 64)"/>
+  </g>
+</svg>

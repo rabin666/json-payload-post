@@ -1,0 +1,91 @@
+{
+  "name": "json-payload-post",
+  "displayName": "JSON Payload Post",
+  "description": "Send the active JSON file as a POST payload to a configurable endpoint, inspect the response inline, and save it to disk.",
+  "version": "0.0.1",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "json-payload-post",
+          "title": "JSON Payload Post",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "json-payload-post": [
+        {
+          "id": "jsonPayloadPost.panel",
+          "name": "Send Payload",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "jsonPayloadPost.send",
+        "title": "Send JSON Payload",
+        "category": "JSON Payload Post",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "jsonPayloadPost.showLog",
+        "title": "Show Request Log",
+        "category": "JSON Payload Post"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "jsonPayloadPost.send",
+          "when": "resourceLangId == json || resourceLangId == jsonc",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "JSON Payload Post",
+      "properties": {
+        "jsonPayloadPost.url": {
+          "type": "string",
+          "default": "http://localhost:8010",
+          "description": "Primary URL the JSON payload is POSTed to. Also used by the editor title-bar button."
+        },
+        "jsonPayloadPost.secondaryUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Secondary URL for sending the same JSON to a second server (optional)."
+        },
+        "jsonPayloadPost.timeoutMs": {
+          "type": "number",
+          "default": 30000,
+          "minimum": 0,
+          "description": "Request timeout in milliseconds. Set to 0 to disable the timeout."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "package": "node esbuild.js --production",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.90.0",
+    "esbuild": "^0.21.0",
+    "typescript": "^5.4.0"
+  }
+}

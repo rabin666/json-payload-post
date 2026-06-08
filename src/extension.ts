@@ -15,6 +15,9 @@ export function activate(context: vscode.ExtensionContext): void {
     ),
     vscode.commands.registerCommand("jsonPayloadPost.showLog", () =>
       output.show(true)
+    ),
+    vscode.commands.registerCommand("jsonPayloadPost.downloadTemplate", () =>
+      provider.downloadTemplateCommand()
     )
   );
 }

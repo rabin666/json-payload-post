@@ -4,6 +4,11 @@
   "description": "Send the active JSON file as a POST payload to a configurable endpoint, inspect the response inline, and save it to disk.",
   "version": "0.0.1",
   "publisher": "local",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rabin666/json-payload-post.git"
+  },
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -42,6 +47,11 @@
         "command": "jsonPayloadPost.showLog",
         "title": "Show Request Log",
         "category": "JSON Payload Post"
+      },
+      {
+        "command": "jsonPayloadPost.downloadTemplate",
+        "title": "Download Template File",
+        "category": "JSON Payload Post"
       }
     ],
     "menus": {
@@ -68,9 +78,24 @@
         },
         "jsonPayloadPost.timeoutMs": {
           "type": "number",
-          "default": 30000,
+          "default": 300000,
           "minimum": 0,
           "description": "Request timeout in milliseconds. Set to 0 to disable the timeout."
+        },
+        "jsonPayloadPost.decodeBase64": {
+          "type": "boolean",
+          "default": false,
+          "description": "Force every response to be base64-decoded into the real file before saving/opening/comparing. Usually unnecessary: responses with a 'Content-Transfer-Encoding: base64' header are decoded automatically, and base64-looking bodies offer a one-click 'Decode & re-send'. Enable this only for servers that return base64 without that header."
+        },
+        "jsonPayloadPost.diffPdfMarkDifferences": {
+          "type": "boolean",
+          "default": true,
+          "description": "Pass --mark-differences to diff-pdf so differing regions are marked with a rectangle in the comparison view."
+        },
+        "jsonPayloadPost.autoSaveFileResponses": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically open the Save As dialog when a response is a file (binary, base64-decoded, or an attachment). Off by default so it doesn't interrupt the two-server compare workflow."
         }
       }
     }
@@ -80,11 +105,13 @@
     "compile": "node esbuild.js",
     "watch": "node esbuild.js --watch",
     "package": "node esbuild.js --production",
+    "vsix": "npm run package && vsce package",
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^2.26.0",
     "esbuild": "^0.21.0",
     "typescript": "^5.4.0"
   }

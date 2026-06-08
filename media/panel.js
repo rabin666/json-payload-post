@@ -5,6 +5,9 @@
   const compareNote = document.getElementById("compare-note");
 
   // Per-server-block element references and helpers, keyed by target.
+  const prev = vscode.getState() || { urls: {} };
+  const storedUrls = prev.urls || {};
+
   const cards = {};
   document.querySelectorAll("section.server").forEach((section) => {
     const target = section.getAttribute("data-target");
@@ -14,47 +17,49 @@
       sendBtn: section.querySelector(".send"),
       openBtn: section.querySelector(".open"),
       saveBtn: section.querySelector(".save"),
+      clearBtn: section.querySelector(".clear"),
       statusEl: section.querySelector(".status"),
+      hintEl: section.querySelector(".decode-hint"),
       resultEl: section.querySelector(".result"),
       infoEl: section.querySelector(".info-grid"),
       bodyEl: section.querySelector(".result-body"),
     };
     cards[target] = card;
+    // Restore prior URL (survives the webview being hidden/disposed).
+    if (typeof storedUrls[target] === "string") {
+      card.urlInput.value = storedUrls[target];
+    }
     wireCard(card);
   });
 
-  // Restore prior URLs (survives the webview being hidden/disposed).
-  const prev = vscode.getState() || {};
-  for (const target of Object.keys(cards)) {
-    if (prev[target] && typeof prev[target] === "string") {
-      cards[target].urlInput.value = prev[target];
+  function saveState() {
+    const urls = {};
+    for (const target of Object.keys(cards)) {
+      urls[target] = cards[target].urlInput.value;
     }
+    vscode.setState({ urls });
   }
 
-  function saveState() {
-    const state = {};
-    for (const target of Object.keys(cards)) {
-      state[target] = cards[target].urlInput.value;
-    }
-    vscode.setState(state);
+  // forceDecode is used by the "Decode & re-send" hint; normal sends rely on the
+  // Content-Transfer-Encoding header (auto) or the jsonPayloadPost.decodeBase64 setting.
+  function sendCard(card, forceDecode) {
+    card.sendBtn.disabled = true;
+    card.sendBtn.textContent = "Sending…";
+    showStatus(card, "");
+    card.hintEl.hidden = true;
+    vscode.postMessage({
+      type: "send",
+      target: card.target,
+      url: card.urlInput.value.trim(),
+      decodeBase64: Boolean(forceDecode),
+    });
   }
 
   function wireCard(card) {
-    function send() {
-      card.sendBtn.disabled = true;
-      card.sendBtn.textContent = "Sending…";
-      showStatus(card, "");
-      vscode.postMessage({
-        type: "send",
-        target: card.target,
-        url: card.urlInput.value.trim(),
-      });
-    }
-
-    card.sendBtn.addEventListener("click", send);
+    card.sendBtn.addEventListener("click", () => sendCard(card));
     card.urlInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
-        send();
+        sendCard(card);
       }
     });
     card.urlInput.addEventListener("change", () => {
@@ -71,10 +76,26 @@
     card.openBtn.addEventListener("click", () =>
       vscode.postMessage({ type: "openInEditor", target: card.target })
     );
+    card.clearBtn.addEventListener("click", () => clearCard(card));
+  }
+
+  function clearCard(card) {
+    card.resultEl.hidden = true;
+    card.infoEl.innerHTML = "";
+    card.bodyEl.textContent = "";
+    card.bodyEl.classList.remove("notice");
+    card.hintEl.hidden = true;
+    showStatus(card, "");
+    vscode.postMessage({ type: "clear", target: card.target });
   }
 
   compareBtn.addEventListener("click", () =>
     vscode.postMessage({ type: "comparePdfs" })
+  );
+
+  const downloadTemplateBtn = document.getElementById("download-template");
+  downloadTemplateBtn.addEventListener("click", () =>
+    vscode.postMessage({ type: "downloadTemplate" })
   );
 
   function setSending(card, sending) {
@@ -122,10 +143,34 @@
       infoRow("Size", humanSize(msg.size)),
       infoRow("Filename", escapeHtml(msg.filename)),
     ];
+    if (msg.transferEncoding) {
+      rows.push(infoRow("Transfer-Enc", escapeHtml(msg.transferEncoding)));
+    }
+    if (msg.decoded) {
+      const via =
+        msg.decodedVia === "header"
+          ? "Base64 → binary (via header)"
+          : "Base64 → binary (toggle)";
+      rows.push(infoRow("Decoded", via));
+    }
     if (msg.checksum) {
       rows.push(infoRow("Checksum", escapeHtml(msg.checksum)));
     }
     card.infoEl.innerHTML = rows.join("");
+
+    // Offer to decode when the body looks like base64 but wasn't decoded.
+    if (msg.looksBase64 && !msg.decoded) {
+      card.hintEl.hidden = false;
+      card.hintEl.innerHTML =
+        "This response looks like Base64. " +
+        '<button class="link redecode" type="button">Decode &amp; re-send</button>';
+      const btn = card.hintEl.querySelector(".redecode");
+      if (btn) {
+        btn.addEventListener("click", () => sendCard(card, true));
+      }
+    } else {
+      card.hintEl.hidden = true;
+    }
 
     card.saveBtn.disabled = false;
     card.openBtn.disabled = msg.kind === "binary";

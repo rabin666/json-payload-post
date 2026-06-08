@@ -1,5 +1,5 @@
-// Integration with the external `diff-pdf` tool (https://vslavik.github.io/diff-pdf/).
-// We launch it in --view mode to open its GUI comparison window.
+// Wrapper around the external `diff-pdf` tool (https://vslavik.github.io/diff-pdf/),
+// launched in --view mode to show its GUI comparison window.
 
 import { spawn } from "child_process";
 import { promises as fs } from "fs";
@@ -7,18 +7,26 @@ import * as os from "os";
 import * as path from "path";
 
 let availability: Promise<boolean> | undefined;
-/** Monotonic counter so each comparison gets a distinct pair of temp files. */
 let runCounter = 0;
 const TEMP_SUBDIR = "json-payload-post";
 
-/** Whether `diff-pdf` can be found on the PATH. Result is cached for the session. */
+/**
+ * Resolve whether `diff-pdf` is on the PATH, cached for the session.
+ *
+ * Uses `where`/`which` instead of running `diff-pdf --help`, which opens a GUI help
+ * window on the Windows build.
+ */
 export function isDiffPdfAvailable(): Promise<boolean> {
   if (!availability) {
     availability = new Promise<boolean>((resolve) => {
+      const finder = process.platform === "win32" ? "where" : "which";
       try {
-        const child = spawn("diff-pdf", ["--help"], { stdio: "ignore" });
-        child.on("error", () => resolve(false)); // ENOENT — not installed / not on PATH
-        child.on("exit", () => resolve(true)); // ran, regardless of exit code
+        const child = spawn(finder, ["diff-pdf"], {
+          stdio: "ignore",
+          windowsHide: true,
+        });
+        child.on("error", () => resolve(false));
+        child.on("exit", (code) => resolve(code === 0));
       } catch {
         resolve(false);
       }
@@ -28,18 +36,17 @@ export function isDiffPdfAvailable(): Promise<boolean> {
 }
 
 /**
- * Write both PDF buffers to a UNIQUE pair of temp files and launch `diff-pdf --view`
- * to open a comparison window. Resolves once the process has been spawned (the window
- * stays open independently). Rejects if the files can't be written or diff-pdf can't
- * be launched.
+ * Write both PDFs to a fresh pair of temp files and launch `diff-pdf --view`. Resolves
+ * once the process is spawned; the window then runs independently. Rejects if the files
+ * can't be written or the process can't start.
  *
- * Each call uses fresh filenames so we never overwrite a file that a previously opened
- * diff-pdf window is still holding open (which on Windows fails with EBUSY/EPERM and was
- * the cause of intermittent failures).
+ * Filenames are unique per call to avoid overwriting a file that an open diff-pdf window
+ * still holds (a locked overwrite fails with EBUSY/EPERM on Windows).
  */
 export async function runDiffPdf(
   primary: Uint8Array,
-  secondary: Uint8Array
+  secondary: Uint8Array,
+  markDifferences = true
 ): Promise<void> {
   const dir = path.join(os.tmpdir(), TEMP_SUBDIR);
   await fs.mkdir(dir, { recursive: true });
@@ -52,17 +59,24 @@ export async function runDiffPdf(
   await fs.writeFile(fileA, primary);
   await fs.writeFile(fileB, secondary);
 
-  // Make sure both files actually landed and are non-empty before launching.
+  // Guard against launching on an empty/failed write.
   const [statA, statB] = await Promise.all([fs.stat(fileA), fs.stat(fileB)]);
   if (statA.size === 0 || statB.size === 0) {
     throw new Error("One of the PDF responses was empty; nothing to compare.");
   }
 
+  const args = ["--view"];
+  if (markDifferences) {
+    args.push("--mark-differences");
+  }
+  args.push(fileA, fileB);
+
   await new Promise<void>((resolve, reject) => {
     let settled = false;
-    const child = spawn("diff-pdf", ["--view", fileA, fileB], {
+    const child = spawn("diff-pdf", args, {
       detached: true,
       stdio: "ignore",
+      windowsHide: true,
     });
     child.on("error", (err) => {
       if (!settled) {
@@ -70,7 +84,6 @@ export async function runDiffPdf(
         reject(err);
       }
     });
-    // Give the spawn a tick to fail fast on ENOENT; otherwise consider it launched.
     child.on("spawn", () => {
       if (!settled) {
         settled = true;
@@ -81,11 +94,7 @@ export async function runDiffPdf(
   });
 }
 
-/**
- * Best-effort removal of temp PDFs from previous comparisons. Files that are still
- * locked by an open diff-pdf window will fail to delete — that's fine, we ignore it
- * and never reuse a name anyway.
- */
+/** Remove temp PDFs from earlier comparisons; ignores files still locked by an open window. */
 async function pruneOldFiles(dir: string): Promise<void> {
   try {
     const entries = await fs.readdir(dir);
@@ -95,6 +104,6 @@ async function pruneOldFiles(dir: string): Promise<void> {
         .map((name) => fs.unlink(path.join(dir, name)).catch(() => undefined))
     );
   } catch {
-    // Directory unreadable or already gone — nothing to prune.
+    // Directory missing or unreadable.
   }
 }

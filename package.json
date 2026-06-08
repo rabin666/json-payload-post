@@ -105,7 +105,8 @@
     "compile": "node esbuild.js",
     "watch": "node esbuild.js --watch",
     "package": "node esbuild.js --production",
-    "vsix": "npm run package && vsce package",
+    "vsix": "npm run package && vsce package -o json-payload-post.vsix",
+    "install-extension": "npm install && npm run vsix && code --install-extension json-payload-post.vsix --force",
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {

@@ -35,6 +35,43 @@ inspecting the response without leaving the editor.
   `--mark-differences`) to open a visual comparison. The button is shown only when both
   responses are PDFs and `diff-pdf` is on the `PATH`.
 
+## Install
+
+Build and install the extension into VS Code in one step (requires Node.js and the `code`
+CLI on your `PATH`):
+
+```bash
+git clone https://github.com/rabin666/json-payload-post.git
+cd json-payload-post
+npm run install-extension
+```
+
+`install-extension` installs dependencies, builds the `.vsix`, and installs it into VS
+Code (`--force` upgrades any existing copy). Reload VS Code afterwards.
+
+To produce a shareable `.vsix` without installing, run `npm run vsix`.
+
+### Install from a release (no clone, no build)
+
+Pushing a `v*` tag triggers the release workflow, which attaches `json-payload-post.vsix`
+to the GitHub release. Devs can then install the latest release in one command:
+
+```bash
+# bash
+curl -L -o json-payload-post.vsix \
+  https://github.com/rabin666/json-payload-post/releases/latest/download/json-payload-post.vsix \
+  && code --install-extension json-payload-post.vsix --force
+```
+
+```powershell
+# PowerShell
+iwr https://github.com/rabin666/json-payload-post/releases/latest/download/json-payload-post.vsix -OutFile json-payload-post.vsix; code --install-extension json-payload-post.vsix --force
+```
+
+> VS Code's `code --install-extension` only accepts a local `.vsix` or a Marketplace ID,
+> so the file is downloaded first. There is no command that installs straight from a repo
+> URL.
+
 ## Usage
 
 1. Open the JSON Payload Post view from the activity bar.
